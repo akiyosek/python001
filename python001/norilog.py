@@ -45,3 +45,13 @@ def load_data():
         database = []
     return database
 
+@application.route('/')
+def index():
+    """トップページ
+    テンプレートを使用してページを表示します
+    """
+    return render_template('index.html')
+
+if __name__ = '__main__':
+    # IPアドレス 0.0.0.0 の8000番ポートでアプリケーションを実行します
+    application.run('0.0.0.0', 8000, debut=True)
