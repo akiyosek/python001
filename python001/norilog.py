@@ -52,6 +52,6 @@ def index():
     """
     return render_template('index.html')
 
-if __name__ === '__main__':
+if __name__ == '__main__':
     # IPアドレス 0.0.0.0 の8000番ポートでアプリケーションを実行します
     application.run('0.0.0.0', 8000, debut=True)
