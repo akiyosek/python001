@@ -2,7 +2,7 @@
 import json
 
 from datetime import datetime
-from flask import Flask, render_template, redirect, Markup, escape
+from flask import Flask, render_template, redirect, Markup, escape, request
 
 application = Flask(__name__)
 
