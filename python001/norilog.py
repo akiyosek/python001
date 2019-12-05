@@ -54,4 +54,4 @@ def index():
 
 if __name__ == '__main__':
     # IPアドレス 0.0.0.0 の8000番ポートでアプリケーションを実行します
-    application.run('0.0.0.0', 8000, debut=True)
+    application.run('0.0.0.0', 8000, debug=True)
