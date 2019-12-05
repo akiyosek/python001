@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
 import json
 
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect
 application = Flask(__name__)
 
 DATA_FILE = 'norilog.json'
@@ -50,7 +50,22 @@ def index():
     """トップページ
     テンプレートを使用してページを表示します
     """
-    return render_template('index.html')
+    # 記録データを読み込みます
+    rides = load_data()
+    return render_template('index.html', rides=rides)
+
+@application.route('/save', methods=['POST'])
+def save():
+    """記録用 URL"""
+    # 記録されたデータを取得します
+    start = request.form.get('start') # 出発
+    finish = request.form.get('finish') #到着
+    memo = request.form.get('memo') #メモ
+    create_at = datetime.now() # 記録日時(現在時間)を保存します
+    save_data(start, finish, memo, create_at)
+    # 保存後はトップページにリダイレクトします
+    return redirect('/')
+
 
 if __name__ == '__main__':
     # IPアドレス 0.0.0.0 の8000番ポートでアプリケーションを実行します
