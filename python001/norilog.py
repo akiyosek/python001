@@ -55,10 +55,6 @@ def index():
     rides = load_data()
     return render_template('index.html', rides=rides)
 
-if __name__ == '__main__':
-    # IPアドレス 0.0.0.0 の8000番ポートでアプリケーションを実行します
-    application.run('0.0.0.0', 8000, debug=True)
-
 @application.route('/save', methods=['POST'])
 def save():
     """記録用 URL"""
@@ -75,3 +71,9 @@ def save():
 def nl2br_filter(s):
     """改行文字を br タグに置き換えるテンプレートフィルタ"""
     return escape(s).replace('\n', Markup('<br>'))
+
+
+if __name__ == '__main__':
+    # IPアドレス 0.0.0.0 の8000番ポートでアプリケーションを実行します
+    application.run('0.0.0.0', 8000, debug=True)
+
