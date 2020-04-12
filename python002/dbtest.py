@@ -13,9 +13,9 @@ conn = mydb.connect(
 # DB操作用にカーソルを作成
 cur = conn.cursor()
 
-
 # データ投入
-cur.execute("INSERT INTO test VALUES (1, 'scott', '1件目のデータ', '2020/04/12')")
+cur.execute("INSERT INTO test VALUES (1, 'scott', '1件目のデータ', '')")
+
 
 # DB操作が終わったらカーソルとコネクションを閉じる
 cur.close()
