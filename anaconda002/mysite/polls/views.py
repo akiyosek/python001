@@ -11,9 +11,9 @@ from .models import Question
 
 def index(request):
 #   return HttpResponse("Hello, World. You're at the polls index.")
-   latest_question_list = Question.objects.order_by('pub_date')[:5]
+   latest_question_list = Question.objects.order_by('-pub_date')[:5]
    context = {
-      'latest_question_list': latest_question_list,
+      'latest_question_list': latest_question_list
    }
    return render(request, 'polls/index.html', context)
 
