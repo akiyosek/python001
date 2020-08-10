@@ -10,9 +10,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <link rel="stylesheet" type="text/css" href="{% static 'moneybook/main_style.css' %}">
-    <script type="text/javascript" src="{% static 'moneybook/js/data.js' %}"></script>
-    <script type="text/javascript" src="{% static 'moneybook/js/draw.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'money/main_style.css' %}">
+    <script type="text/javascript" src="{% static 'money/js/data.js' %}"></script>
+    <script type="text/javascript" src="{% static 'money/js/draw.js' %}"></script>
     <script>
       $(function () {
         let dateFormat = 'yy-mm-dd';
@@ -31,16 +31,17 @@
             <h1>{{ year }}年　{{ month }}月</h1>
           </div>
           <div class="col-md-2 text-center mt-4">
-            <a href="/moneybook/{{ prev_year }}/{{ prev_month }}">
+            <a href="/money/{{ prev_year }}/{{ prev_month }}">
               <h4> << {{ prev_month }}月</h4>
             </a>
           </div>
           <div class="col-md-2 text-center mt-4">
-            <a href="/moneybook/{{ next_year }}/{{ next_month }}">
+            <a href="/money/{{ next_year }}/{{ next_month }}">
               <h4>{{ next_month }}月 >> </h4>
             </a>
           </div>
         </div>
+
         <!-- 支出の登録フォーム -->
         <div class="row">
           <div class="card">
@@ -72,6 +73,7 @@
               </form>
             </div>
           </div>
+
           <!-- 総支出の表示 -->
           <div class="card">
             <div class="in-card">
@@ -82,6 +84,7 @@
             </div>
           </div>
         </div>
+
         <div class="row">
           <!-- 支出履歴テーブル -->
           <div class="card">
@@ -121,12 +124,13 @@
               </table>
             </div>
           </div>
+
           <!-- 支出額の推移グラフ -->
           <div class="card">
             <div class="in-card">
               <h2>支出額の推移</h2>
               <canvas id="data"></canvas>
-              <script type="text/javascript" src="{% static 'moneybook/js/draw.js' %}"></script>
+              <script type="text/javascript" src="{% static 'money/js/draw.js' %}"></script>
             </div>
           </div>
         </div>

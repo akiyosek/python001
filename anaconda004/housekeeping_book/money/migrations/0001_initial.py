@@ -12,13 +12,21 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Money',
+            name='ExpenditureDetail',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('use_date', models.DateField(verbose_name='日付')),
-                ('detail', models.CharField(max_length=200)),
+                ('user_id', models.IntegerField()),
+                ('used_date', models.DateField()),
                 ('cost', models.IntegerField(default=0)),
-                ('category', models.CharField(max_length=10)),
+                ('money_use', models.CharField(max_length=200)),
+                ('category', models.CharField(choices=[('food', '食費'), ('fare', '交通費'), ('medical', '医療費'), ('tuition', '学費'), ('amusement', '娯楽費'), ('tax', '税金'), ('communication', '通信費'), ('clothes', '衣料品'), ('others', '雑費')], max_length=10)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='ReceiptImage',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('img', models.ImageField(upload_to='receipt')),
             ],
         ),
     ]
