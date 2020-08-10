@@ -1,83 +1,166 @@
-import calendar    
-import datetime
 from django.shortcuts import render, redirect
-from django.utils import timezone
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
-import matplotlib.pyplot as plt
-import pytz
-from .models import Money
-from .forms import SpendingForm
-from .utils import index_utils
-
-plt.rcParams['font.family'] = 'IPAPGothic'
-
-TODAY = str(timezone.now()).split('-')
-
-class MainView(View):
+from django.utils import timezone
+import calendar
+import os
+from .models import ExpenditureDetail
+from .forms import ExpenditureForm
+TODAY = str(timezone.now()).split("-")
+# Create your views here.
+class MainView(LoginRequiredMixin, View):
+    login_url = "/login"
+    redirect_field_name = ""
     def get(self, request, year=TODAY[0], month=TODAY[1]):
-
-        money = Money.objects.filter(use_date__year=year,    
-                            use_date__month=month).order_by('use_date')
-        total = index_utils.calc_month_pay(money)
-        index_utils.format_date(money)
-        form = SpendingForm()
-        next_year, next_month = index_utils.get_next(year, month)
-        prev_year, prev_month = index_utils.get_prev(year, month)
-
-        context = {'year' : year,
-                'month' : month,
-                'prev_year' : prev_year,
-                'prev_month' : prev_month,
-                'next_year' : next_year,
-                'next_month' : next_month,
-                'money' : money,
-                'total' : total,
-                'form' : form
-                }
-
-        draw_graph(year, month)
-
-        return render(request, 'money/index.html', context)
-
+        money = ExpenditureDetail.objects.filter(
+            used_date__year=year, used_date__month=month, user_id=request.user.id
+        ).order_by("used_date")
+        total = 0
+        for m in money:
+            total += m.cost
+        next_year, next_month = get_next(year, month)
+        prev_year, prev_month = get_prev(year, month)
+        context = {
+            "year": year,
+            "month": month,
+            "next_year": next_year,
+            "next_month": next_month,
+            "prev_year": prev_year,
+            "prev_month": prev_month,
+            "total_cost": total,
+            "money": money,
+            "form": ExpenditureForm(),
+        }
+        self.draw_graph(year, month, request.user.id)
+        return render(request, "moneybook/mainview.html", context)
     def post(self, request, year=TODAY[0], month=TODAY[1]):
         data = request.POST
-        use_date = data['use_date']
-        cost = data['cost']
-        detail = data['detail']
-        category = data['category']
-        use_date = timezone.datetime.strptime(use_date, "%Y/%m/%d")
-        tokyo_timezone = pytz.timezone('Asia/Tokyo')
-        use_date = tokyo_timezone.localize(use_date)
-        use_date += datetime.timedelta(hours=9)
-
-        Money.objects.create(
-                use_date = use_date,
-                detail = detail,
-                cost = int(cost),
-                category = category,
+        form = ExpenditureForm(data)
+        if "add" in data.keys():
+            if form.is_valid():
+                used_date = data["used_date"]
+                cost = data["cost"]
+                money_use = data["money_use"]
+                category_choices = data["category"]
+                used_date = timezone.datetime.strptime(used_date, "%Y-%m-%d")
+                ExpenditureDetail.objects.create(
+                    user_id=request.user.id,
+                    used_date=used_date,
+                    cost=cost,
+                    money_use=money_use,
+                    category=category_choices,
                 )
-
-        return redirect(to='/money/{}/{}'.format(year, month)) 
-
-def draw_graph(year, month):    #追加
-
-    money = Money.objects.filter(use_date__year=year,
-            use_date__month=month).order_by('use_date')
-    last_day = calendar.monthrange(int(year), int(month))[1] + 1
-
-    day = [i for i in range(1, last_day)]
-    cost = [0 for i in range(len(day))]
-    for m in money:
-        cost[int(str(m.use_date).split('-')[2])-1] += int(m.cost)
-    plt.figure()
-    plt.bar(day, cost, color='#00bfff', edgecolor='#0000ff')
-    plt.grid(True)
-    plt.xlim([0, 31])
-    plt.xlabel('日付', fontsize=16)
-    plt.ylabel('支出額(円)', fontsize=16)
-
-    #staticフォルダの中にimagesというフォルダを用意しておきその中に入るようにしておく
-    plt.savefig('money/static/images/bar_{}_{}.svg'.format(year, month),
-            transparent=True)
-
-    return None
+            money = ExpenditureDetail.objects.filter(
+                used_date__year=year, used_date__month=month, user_id=request.user.id
+            ).order_by("used_date")
+            total = 0
+            for m in money:
+                total += m.cost
+            next_year, next_month = get_next(year, month)
+            prev_year, prev_month = get_prev(year, month)
+            context = {
+                "year": year,
+                "month": month,
+                "next_year": next_year,
+                "next_month": next_month,
+                "prev_year": prev_year,
+                "prev_month": prev_month,
+                "total_cost": total,
+                "money": money,
+                "form": form,
+            }
+            self.draw_graph(year, month, request.user.id)
+            return render(request, "moneybook/mainview.html", context)
+        elif "delete" in data.keys():
+            used_date = data["used_date"]
+            cost = data["cost"]
+            money_use = data["money_use"]
+            used_date = used_date.replace("年", "-").replace("月", "-").replace("日", "")
+            y, m, d = used_date.split("-")
+            ExpenditureDetail.objects.filter(
+                used_date__year=y,
+                used_date__month=m,
+                used_date__day=d,
+                cost__iexact=cost,
+                money_use__iexact=money_use,
+            ).delete()
+            return redirect(to="/moneybook/{}/{}".format(year, month))
+    def draw_graph(self, year, month, user_id):
+        money = ExpenditureDetail.objects.filter(
+            used_date__year=year, used_date__month=month, user_id=user_id
+        ).order_by("used_date")
+        last_day = calendar.monthrange(int(year), int(month))[1] + 1
+        day = [i for i in range(1, last_day)]
+        cost = [0 for i in range(len(day))]
+        for m in money:
+            cost[int(str(m.used_date).split("-")[2]) - 1] += int(m.cost)
+        text_day = ",".join(list(map(str, day)))
+        text_cost = ",".join(list(map(str, cost)))
+        json_template = (
+            """var json = {
+            type: 'bar',
+            data: {
+                labels: [
+        """
+            + str(text_day)
+            + """
+                ],
+                datasets: [{
+                    label: '支出',
+                    data: [
+        """
+            + str(text_cost)
+            + """
+                    ],
+                    borderWidth: 2,
+                    strokeColor: 'rgba(0,0,255,1)',
+                    backgroundColor: 'rgba(0,191,255,0.5)'
+                }]
+            },
+            options: {
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            beginAtZero:true
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: '日付',
+                            fontsize: 18
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: '支出額 (円)',
+                            fontsize: 18
+                        }
+                    }]
+                },
+                responsive: true
+            }
+        }
+        """
+        )
+        with open(
+            os.path.dirname(os.path.abspath(__file__)) + "/static/moneybook/js/data.js",
+            "w",
+        ) as f:
+            f.write(json_template)
+def get_next(year, month):
+    year = int(year)
+    month = int(month)
+    if month == 12:
+        return str(year + 1), "1"
+    else:
+        return str(year), str(month + 1)
+def get_prev(year, month):
+    year = int(year)
+    month = int(month)
+    if month == 1:
+        return str(year - 1), "12"
+    else:
+        return str(year), str(month - 1)
